@@ -1,6 +1,3 @@
-#ifndef SERVER_H
-#define SERVER_H
+#pragma once
 
 void server_task(void);
-
-#endif // SERVER_H
