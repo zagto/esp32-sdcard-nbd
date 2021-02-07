@@ -38,13 +38,13 @@ bool enter_flash_mode(sdmmc_card_t *card) {
         ESP_LOGE("flash-mode",
                  "Failed to initialize SD card: %s. Make sure the card is inserted and the device is turned off.",
                  esp_err_to_name(status));
-        return NULL;
+        return false;
     }
 
     active_mode = FLASH;
     ESP_LOGI("flash-mode", "Initialization complete.");
 
-    return card;
+    return true;
 }
 
 
