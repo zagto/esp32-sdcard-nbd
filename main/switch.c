@@ -20,18 +20,15 @@ bool enter_flash_mode(sdmmc_card_t *card) {
 
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-    ESP_LOGI("flash-mode", "A.");
 
     /* example says external pullups should be necessary, but it seems to work without */
     sdmmc_host_pullup_en(SDMMC_HOST_SLOT_1, 4);
-    ESP_LOGI("flash-mode", "B.");
 
     esp_err_t status = sdmmc_host_init_slot(SDMMC_HOST_SLOT_1, &slot_config);
     if (status != ESP_OK) {
         ESP_LOGE("flash-mode", "Failed to initialize SD slot: %s", esp_err_to_name(status));
         abort();
     }
-    ESP_LOGI("flash-mode", "C.");
 
     status = sdmmc_card_init(&host, card);
     if (status != ESP_OK) {
