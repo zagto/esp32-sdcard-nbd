@@ -4,10 +4,11 @@
 #include "driver/sdmmc_host.h"
 #include "driver/gpio.h"
 #include "switch.h"
+#include "freertos/task.h"
 
 
-static const uint32_t ALL_SD_PINS = GPIO_SEL_14|GPIO_SEL_15|GPIO_SEL_2|GPIO_SEL_4|GPIO_SEL_12|GPIO_SEL_13;
-//static const uint32_t PIN_POWER = 23;
+static const uint64_t ALL_SD_PINS = GPIO_SEL_14|GPIO_SEL_15|GPIO_SEL_2|GPIO_SEL_4|GPIO_SEL_12|GPIO_SEL_13;
+static const uint64_t POWER_PINS = GPIO_SEL_0|GPIO_SEL_16|GPIO_SEL_19|GPIO_SEL_21|GPIO_SEL_32|GPIO_SEL_33;
 
 enum Mode {
     IDLE, FLASH, DEVICE
@@ -17,6 +18,27 @@ static enum Mode active_mode = IDLE;
 
 bool enter_flash_mode(sdmmc_card_t *card) {
     ESP_LOGI("flash-mode", "Entering...");
+
+    gpio_config_t power_config = {
+        POWER_PINS,
+        GPIO_MODE_OUTPUT,
+        GPIO_PULLUP_ENABLE,
+        GPIO_PULLDOWN_DISABLE,
+        GPIO_INTR_DISABLE
+    };
+    gpio_config(&power_config);
+    for (uint64_t pin = 0; pin < 64; pin++) {
+        if (POWER_PINS & (1ull << pin)) {
+            gpio_set_drive_capability(pin, GPIO_DRIVE_CAP_3);
+        }
+    }
+    for (uint64_t pin = 0; pin < 64; pin++) {
+        if (POWER_PINS & (1ull << pin)) {
+            gpio_set_level(pin, 1);
+        }
+    }
+
+    vTaskDelay(50);
 
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
@@ -46,8 +68,8 @@ bool enter_flash_mode(sdmmc_card_t *card) {
 
 
 void leave_flash_mode() {
-    for (uint32_t pin = 0; pin < 32; pin++) {
-        if (ALL_SD_PINS & (1u << pin)) {
+    for (uint64_t pin = 0; pin < 64; pin++) {
+        if (ALL_SD_PINS & (1ull << pin)) {
             gpio_reset_pin(pin);
         }
     }
