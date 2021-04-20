@@ -20,14 +20,13 @@
 #include "lwip/sys.h"
 
 #include "wifi.h"
+#include "config.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu
 
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
-#define EXAMPLE_ESP_WIFI_SSID      "FRITZ!Box 7412"
-#define EXAMPLE_ESP_WIFI_PASS      "unsealed sphere"
 #define EXAMPLE_ESP_MAXIMUM_RETRY  3
 
 /* FreeRTOS event group to signal when we are connected*/
@@ -105,8 +104,8 @@ void wifi_init_sta(void)
 
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .password = EXAMPLE_ESP_WIFI_PASS,
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASSWORD,
             /* Setting a password implies station will connect to all security modes including WEP/WPA.
              * However these modes are deprecated and not advisable to be used. Incase your Access point
              * doesn't support WPA2, these mode can be enabled by commenting below line */
@@ -135,11 +134,11 @@ void wifi_init_sta(void)
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "connected to ap SSID:%s",
+                 WIFI_SSID);
     } else if (bits & WIFI_FAIL_BIT) {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s",
+                 WIFI_SSID);
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
@@ -159,7 +158,7 @@ static void initialize_nvs() {
     ESP_ERROR_CHECK(ret);
 }
 
-void initialize_wifi(const char *ssid, const char *password) {
+void initialize_wifi() {
     initialize_nvs();
     wifi_init_sta();
 }
