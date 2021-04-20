@@ -75,11 +75,28 @@ static uint64_t ntohq(uint64_t value) {
     return htonq(value);
 }
 
+/* lwip ignored the MSG_WAITALL flag so implement it here */
+ssize_t recv_waitall(int socket, void *buffer, size_t length, int flags) {
+    ssize_t received_length = 0;
+    while (length > 0) {
+        ssize_t result = recv(socket, buffer, length, flags);
+        if (result > 0) {
+            received_length += result;
+        }
+        if (result <= 0 || (flags & MSG_WAITALL) == 0) {
+            return result;
+        }
+
+        buffer += result;
+        length -= result;
+    }
+    return received_length;
+}
 
 static bool ignore_bytes(int fd, size_t amount) {
     for (size_t i = 0; i < amount; i++) {
         char byte;
-        ssize_t len = recv(fd, &byte, 1, MSG_WAITALL);
+        ssize_t len = recv_waitall(fd, &byte, 1, MSG_WAITALL);
         if (len != 1) {
             return false;
         }
@@ -124,7 +141,7 @@ static bool handshake(int fd) {
     }
 
     uint32_t client_flags;
-    len = recv(fd, &client_flags, sizeof(client_flags), MSG_WAITALL);
+    len = recv_waitall(fd, &client_flags, sizeof(client_flags), MSG_WAITALL);
     if (len != sizeof(client_flags)) {
         return false;
     }
@@ -136,7 +153,7 @@ static bool handshake(int fd) {
 
     while (true) {
         struct option_packet option;
-        len = recv(fd, &option, sizeof(option), MSG_WAITALL);
+        len = recv_waitall(fd, &option, sizeof(option), MSG_WAITALL);
         if (len != sizeof(option)) {
             return false;
         }
@@ -170,7 +187,7 @@ static bool handshake(int fd) {
             return false;
 
         case NBD_OPT_LIST:
-            if (!send_reply(fd, number, NBD_REP_SERVER, 6, (uint8_t *)"sdcard")) {
+            if (!send_reply(fd, number, NBD_REP_SERVER, 0, NULL)) {
                 return false;
             }
             if (!send_reply(fd, number, NBD_REP_ACK, 0, NULL)) {
@@ -260,9 +277,9 @@ static bool transfer_card_data(int fd, sdmmc_card_t *card, uint32_t action, uint
                 ESP_LOGE("server", "Failure while sending read data");
             }
         } else {
-            ssize_t len = recv(fd, buffer + start_offset, transfer_length, MSG_WAITALL);
+            ssize_t len = recv_waitall(fd, buffer + start_offset, transfer_length, MSG_WAITALL);
             if (len != (ssize_t)transfer_length) {
-                ESP_LOGE("server", "Failure while recieving data to write");
+                ESP_LOGE("server", "Failure while recieving data to writelwi");
             }
 
             status = sdmmc_write_sectors(card, buffer, first_sector, sectors_in_buffer);
@@ -296,13 +313,14 @@ static void data_phase(int fd, sdmmc_card_t *card) {
 
     while (true) {
         struct data_request_packet request;
-        len = recv(fd, &request, sizeof(request), MSG_WAITALL);
+        len = recv_waitall(fd, &request, sizeof(request), MSG_WAITALL);
         if (len != sizeof(request)) {
             return;
         }
 
         if (ntohl(request.magic) != 0x25609513) {
             ESP_LOGW("server", "Got invalid request magic");
+            return;
         }
 
         uint32_t action = ntohl(request.type);
