@@ -1,3 +1,3 @@
 #pragma once
 
-void server_task(void);
+__attribute__((noreturn)) void server_task(void);

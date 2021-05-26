@@ -1,4 +1,4 @@
 #pragma once
 
-#define WIFI_SSID "my wifi name"
-#define WIFI_PASSWORD "my wifi password"
+#define WIFI_SSID "ZagtoNet"
+#define WIFI_PASSWORD "catlike relocate camper"
