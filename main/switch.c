@@ -112,8 +112,6 @@ void initialize_switch(void) {
     };
     gpio_config(&input_config);
 
-   // leave_flash_mode();
-
     gpio_set_level(SD_POWER_HOST, 1);
     gpio_set_level(BUS_SW_HOST, 0);
     gpio_set_level(SD_POWER_ESP, 1);

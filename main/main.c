@@ -5,10 +5,7 @@
 #include "switch.h"
 #include <pthread.h>
 
-static void *server_thread_main(void *unused) {
-    server_task();
-}
-
+__attribute__((noreturn))
 static void *host_thread_main(void *ununsed) {
     host_task();
 }
@@ -20,5 +17,4 @@ void app_main(void) {
     pthread_t host_thread;
     pthread_create(&host_thread, NULL, host_thread_main, NULL);
     server_task();
-    //host_task();
 }

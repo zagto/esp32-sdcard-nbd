@@ -226,15 +226,11 @@ static bool transfer_card_data(int fd, sdmmc_card_t *card, uint32_t action, uint
     esp_err_t status;
     assert(sizeof(buffer) >= sector_size);
 
-    //ESP_LOGE("server", "Access action %u, global_offset %llu, length %llu", action, global_offset, length);
-
     while (num_sectors > 0) {
         size_t max_sectors_in_buffer = sizeof(buffer) / sector_size;
         size_t sectors_in_buffer = num_sectors > max_sectors_in_buffer ? max_sectors_in_buffer : num_sectors;
-        //ESP_LOGE("server", "iteration sectors_in_buffer %u", sectors_in_buffer);
 
         if (start_offset != 0 && action == NBD_CMD_WRITE) {
-            //ESP_LOGE("server", "reading first sector");
             /* For writes which don't align with sector boarders, we need to read the first sector
              * to know what should be written into the area that should not be changed but is part
              * of the same sector */
@@ -246,7 +242,6 @@ static bool transfer_card_data(int fd, sdmmc_card_t *card, uint32_t action, uint
         }
 
         if (num_sectors == sectors_in_buffer && end_offset != 0 && (num_sectors > 1 || start_offset == 0)) {
-            //ESP_LOGE("server", "reading last sector");
             /* same for the last block, unless there is only one sector that has just been written
              * as the first */
             status = sdmmc_read_sectors(card,
@@ -263,7 +258,6 @@ static bool transfer_card_data(int fd, sdmmc_card_t *card, uint32_t action, uint
         if (num_sectors == sectors_in_buffer) {
             transfer_length -= end_offset;
         }
-        //ESP_LOGE("server", "iteration transfer_length %u", transfer_length);
 
         if (action == NBD_CMD_READ) {
             status = sdmmc_read_sectors(card, buffer, first_sector, sectors_in_buffer);
@@ -296,7 +290,6 @@ static bool transfer_card_data(int fd, sdmmc_card_t *card, uint32_t action, uint
         start_offset = 0;
     }
 
-    //ESP_LOGE("server", "Access successful");
     return true;
 }
 
